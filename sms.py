@@ -3,7 +3,22 @@ import time
 import sqlite3
 import re
 import json
+import random
 import googlevoice as gv
+
+class Neg(object):
+
+
+   call = None
+   def __init__(self, filename):
+      f = open(filename, "r")
+      self.choices = [line.strip() for line in f]
+      f.close()
+      Neg.call = self
+
+   def randomchoice(self):
+      return random.choice(self.choices)
+
 
 class QuestionHandler(object):
    def __init__(self, dbname):
@@ -33,17 +48,21 @@ class QuestionHandler(object):
       message_list = message.lower().split(' ')#re.findall(r"\w+", message)
       if len(set(answer.lower().split(' ')).intersection(set(message_list))) > 0:
          leveled = self.levelup(user)
-         if leveled:
-            question, answer = self.userinfo(user)
-            return "Correct! You can begin working on the next puzzle now! %s" % question
-         else:
+         if leveled == False: #max level reached
+            #question, answer = self.userinfo(user)
+            #return "Correct! You can begin working on the next puzzle now! %s" % question
+            #  else:
             self.cursor.execute("UPDATE Users SET finished=? WHERE phone=?", (time.time(), user))
             self.connection.commit()
-            return "Congratulations! You have finished the game!"
+            #return "Congratulations! You have finished the game!"
+         print question
+         return question
       else:
+         returnstr = "That is not correct. %s" % Neg.call.randomchoice()
          print message_list
          print answer
-         return "Sorry, %s is not the correct answer for this question.  Please try again! %s" % (message, question)
+         print returnstr
+         return returnstr
 
    def createuser(self, user):
       self.cursor.execute("INSERT INTO Users(phone, qid, created) Values(?, 0, ?)", (user, time.time()))
@@ -91,9 +110,10 @@ class Spawn(object):
 
 
 def main():
+   Neg("neg_responses.data") # init Neg class
    voice = gv.Voice()
-   username = ""
-   password = ""
+   username = "sampwing"
+   password = "487-9783-8773-00"
    voice.login(email=username, passwd=password)
    db = QuestionHandler("portal.sqlite")
    spawn = Spawn(voice, db)
