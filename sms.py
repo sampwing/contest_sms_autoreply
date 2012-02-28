@@ -108,8 +108,8 @@ class Spawn(object):
 
 def main():
    voice = gv.Voice()
-   username = "mikeiz404@gmail.com"
-   password = "cgeekxp"
+   username = ""
+   password = ""
    voice.login(email=username, passwd=password)
    db = QuestionHandler("portal.sqlite")
    spawn = Spawn(voice, db)
