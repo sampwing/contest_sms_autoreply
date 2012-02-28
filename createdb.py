@@ -18,6 +18,6 @@ for line in qfd:
       question, answer = eval(line)
       conn.execute("INSERT INTO Questions(question, answer) VALUES(?, ?)", (question, answer))
    except Exception, e: print e
-conn.execute("INSERT INTO Questions(qid, question, answer) VALUES(0, '', ?)", ("start begin lets go",))
+conn.execute("INSERT INTO Questions(qid, question, answer) VALUES(0, '', ?)", ("start begin lets go play",))
 conn.commit()
 qfd.close()

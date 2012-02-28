@@ -1,0 +1,6 @@
+user: +14088899926
+sent: sdfsd
+correct answer: 6
+SENDING: Sorry, sdfsd is not the correct answer for this question.  Please try again at Portal #3: Entrance.
+TO:+14088899926
+check messages:  True
