@@ -5,6 +5,7 @@ import re
 import json
 import random
 import googlevoice as gv
+import datetime
 
 class Neg(object):
 
@@ -28,15 +29,23 @@ class QuestionHandler(object):
       level, = self.cursor.fetchone()      
       self.maxlevel = int(level)
 
-   def levelup(self, user):
+   def getlevel(self, user):
       self.cursor.execute("SELECT Users.qid FROM Users WHERE Users.phone=?", (user,))
       currentlevel, = self.cursor.fetchone()
-      level = int(currentlevel)
+      return int(currentlevel)
+
+   def getduration(self, user):
+      self.cursor.execute("SELECT Users.created, Users.finished FROM Users WHERE Users.phone=?", (user,))
+      created, finished, = self.cursor.fetchone()
+      return finished-created
+
+   def levelup(self, user):
+      level = self.getlevel(user)
       print "Currently %d/%d level" % (level, self.maxlevel)
       if level >= self.maxlevel:
          return False # User is finished with the game
       else:
-         self.cursor.execute("UPDATE Users SET qid=? WHERE phone=?", (level + 1, user,))
+         self.cursor.execute("UPDATE Users SET qid=? WHERE phone=?", (str(level+1), user,))
          self.connection.commit()
          return True # User is the next level
          
@@ -48,21 +57,24 @@ class QuestionHandler(object):
       message_list = message.lower().split(' ')#re.findall(r"\w+", message)
       if len(set(answer.lower().split(' ')).intersection(set(message_list))) > 0:
          leveled = self.levelup(user)
-         if leveled == False: #max level reached
-            #question, answer = self.userinfo(user)
-            #return "Correct! You can begin working on the next puzzle now! %s" % question
-            #  else:
+         if leveled:
+            if self.getlevel(user) == 1:
+               return "You may now begin at Portal #1: Entrance. Happy testing!"
+            question, answer = self.userinfo(user)
+            if self.getlevel(user) == 2:
+               return "Correct! You may now 'pass through' to Portal #1: Exit.\nHint: Use the Portal #1: Entrance image of the other side as a clue to finding Portal #1: Exit."
+            else:
+               return "Correct! You may now 'pass through' to Portal #%i: Exit." % self.getlevel(user)
+         else:
             self.cursor.execute("UPDATE Users SET finished=? WHERE phone=?", (time.time(), user))
             self.connection.commit()
-            #return "Congratulations! You have finished the game!"
-         print question
-         return question
+            duration = self.getduration(user)
+            return "Congratulations! You have finished the game with a pitiful time of %s. Oh and we lied about the cake.\n\nYou will be contacted when the testing is complete." % (datetime.timedelta(seconds=duration))
       else:
-         returnstr = "That is not correct. %s" % Neg.call.randomchoice()
-         print message_list
-         print answer
-         print returnstr
-         return returnstr
+         if self.getlevel(user) == 0: # game has not begun
+            return "Text the word play to begin. You will find the first portal as well as directions in the BSOE hallway near Perk's."
+         else: # wrong answer
+            return "Sorry, %s is not the correct answer for this question.  Please try again at Portal #%s: Entrance." % (message, question)
 
    def createuser(self, user):
       self.cursor.execute("INSERT INTO Users(phone, qid, created) Values(?, 0, ?)", (user, time.time()))
