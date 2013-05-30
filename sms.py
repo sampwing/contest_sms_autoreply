@@ -124,8 +124,8 @@ class Spawn(object):
 def main():
    Neg("neg_responses.data") # init Neg class
    voice = gv.Voice()
-   username = "sampwing"
-   password = "487-9783-8773-00"
+   username = "USERNAME"
+   password = "PASSWORD"
    voice.login(email=username, passwd=password)
    db = QuestionHandler("portal.sqlite")
    spawn = Spawn(voice, db)
